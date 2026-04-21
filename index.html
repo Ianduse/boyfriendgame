@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>专属男友养成日记</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #ffe6fa 0%, #ffc0cb 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            height: 100vh; margin: 0; color: #555;
+            overflow-x: hidden; overflow-y: auto;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.85); border-radius: 20px;
+            padding: 20px; margin-top: 20px; margin-bottom: 20px;
+            box-shadow: 0 8px 16px rgba(255, 182, 193, 0.5);
+            text-align: center; width: 340px;
+        }
+        h1 { color: #ff69b4; font-size: 20px; margin-bottom: 5px; }
+        .header-info {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; font-size: 14px; font-weight: bold;
+        }
+        .day-counter { color: #ff1493; background: #fff0f5; padding: 5px 10px; border-radius: 15px; }
+        .wallet { color: #ff8c00; background: #fff8dc; padding: 5px 10px; border-radius: 15px; transition: all 0.3s;}
+        
+        .avatar-container { position: relative; margin: 0 auto 10px; width: 150px; height: 150px; }
+        .avatar {
+            width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+            border: 4px solid #fff; box-shadow: 0 4px 10px rgba(255, 182, 193, 0.6);
+            transition: transform 0.2s; cursor: pointer;
+        }
+        .avatar:active { transform: scale(0.95); }
+        .job-badge {
+            position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7); color: #fff; font-size: 12px;
+            padding: 4px 8px; border-radius: 10px; white-space: nowrap; display: none;
+        }
+        
+        .status-bar { background: #eee; border-radius: 10px; height: 15px; margin: 8px 0; overflow: hidden; position: relative; }
+        .fill-food { background: #ffb6c1; height: 100%; width: 50%; transition: width 0.3s;}
+        .fill-mood { background: #87ceeb; height: 100%; width: 50%; transition: width 0.3s;}
+        .fill-health { background: #98fb98; height: 100%; width: 70%; transition: width 0.3s;}
+        
+        .status-text { font-size: 12px; display: flex; justify-content: space-between; margin-top: 5px; font-weight: bold; color: #666; }
+        
+        .button-group {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;
+        }
+        button {
+            border: none; padding: 10px; border-radius: 12px; font-size: 13px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0, 0.1); transition: all 0.2s; color: white;
+        }
+        button:hover { transform: translateY(-2px); }
+        .btn-feed { background: #ff69b4; } 
+        .btn-pat { background: #87ceeb; } 
+        .btn-work { background: #ff8c00; } 
+        .btn-shop { background: #9370db; } 
+        .btn-quote { background: #ffa07a; } 
+        .btn-memory { background: #20b2aa; } 
+        .btn-achieve { background: #ffd700; color: #b8860b; text-shadow: 0 1px 0 #fff;} 
+        .btn-spicy { background: #dc143c; animation: pulse 2s infinite; }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(220, 20, 60, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(220, 20, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 20, 60, 0); }
+        }
+
+        .message-box {
+            background: #fff; border: 2px dashed #ffb6c1; border-radius: 15px;
+            padding: 15px; margin-top: 15px; font-size: 13px; line-height: 1.6;
+            min-height: 40px; color: #d2691e; font-weight: 500; text-align: center;
+        }
+        
+        .history-box {
+            background: #fff0f5; border-radius: 15px; padding: 15px; margin-top: 15px;
+            font-size: 12px; line-height: 1.8; height: 120px; overflow-y: auto;
+            color: #666; text-align: left; box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .history-box::-webkit-scrollbar { width: 6px; }
+        .history-box::-webkit-scrollbar-thumb { background: #ffb6c1; border-radius: 3px; }
+        
+        .toast {
+            position: fixed; top: 20px; background: rgba(0,0,0,0.8); color: white;
+            padding: 10px 20px; border-radius: 20px; font-size: 14px; opacity: 0;
+            transition: opacity 0.3s; pointer-events: none; z-index: 2000;
+        }
+
+        /* 模态框通用样式 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6); display: none; justify-content: center;
+            align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: white; width: 300px; max-height: 80vh; border-radius: 20px; 
+            padding: 20px; text-align: center; position: relative; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; flex-direction: column;
+        }
+        .modal-scrollable { overflow-y: auto; padding-right: 5px; flex: 1; }
+        .modal-scrollable::-webkit-scrollbar { width: 4px; }
+        .modal-scrollable::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+        
+        .modal-close {
+            position: absolute; top: 10px; right: 15px; font-size: 24px;
+            color: #999; cursor: pointer; font-weight: bold; line-height: 1;
+        }
+        .modal-close:hover { color: #333; }
+        .modal-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #ff69b4; }
+        
+        .list-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #f9f9f9; margin-bottom: 10px; padding: 10px;
+            border-radius: 10px; border: 1px solid #eee;
+        }
+        .item-info { text-align: left; flex: 1; padding-right: 10px; }
+        .item-name { font-size: 14px; font-weight: bold; color: #333; }
+        .item-desc { font-size: 11px; color: #888; margin-top: 4px; }
+        .action-btn { background: #ff69b4; padding: 6px 12px; font-size: 12px; min-width: 60px; color: white; border: none; border-radius: 8px;}
+        .story-btn { background: #9370db; padding: 12px; font-size: 13px; margin-bottom: 10px; width: 100%; border-radius: 10px;}
+        .story-btn:hover { background: #8a2be2; }
+        
+        /* 商店翻页按钮 */
+        .shop-nav { display: flex; justify-content: space-between; margin-top: 10px; }
+        .shop-nav button { background: #9370db; padding: 8px; font-size: 12px; flex: 1; margin: 0 5px; }
+        
+        /* 旅游记忆照片墙 */
+        .trip-section { margin-bottom: 20px; text-align: left; }
+        .trip-title { font-size: 15px; font-weight: bold; color: #20b2aa; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px;}
+        .photo-grid { display: flex; flex-direction: column; gap: 10px; }
+        .photo-card { width: 100%; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        /* 成就系统样式 */
+        .achieve-item { 
+            display: flex; align-items: center; background: #fffaf0; margin-bottom: 10px; 
+            padding: 10px; border-radius: 10px; border: 1px solid #ffe4b5; 
+        }
+        .achieve-icon { font-size: 24px; margin-right: 12px; filter: grayscale(100%); opacity: 0.5; transition: all 0.3s;}
+        .achieve-info { text-align: left; flex: 1; }
+        .achieve-name { font-size: 14px; font-weight: bold; color: #888; }
+        .achieve-desc { font-size: 11px; color: #aaa; margin-top: 4px; }
+        .achieve-date { font-size: 10px; color: #ff69b4; margin-top: 4px; display: none; }
+        
+        .achieve-unlocked { background: #fff0f5; border-color: #ffb6c1; }
+        .achieve-unlocked .achieve-icon { filter: grayscale(0%); opacity: 1; }
+        .achieve-unlocked .achieve-name { color: #ff1493; }
+        .achieve-unlocked .achieve-desc { color: #666; }
+        .achieve-unlocked .achieve-date { display: block; }
+
+        #deathModal .modal-content { border: 4px solid #000; background: #fffafa; }
+        #deathModal .modal-title { color: #dc143c; font-size: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="toast" id="toast">提示信息</div>
+
+<div class="container">
+    <h1>💕 专属男友养成日记 💕</h1>
+    
+    <div class="header-info">
+        <div class="day-counter" id="dayDisplay">计算中...</div>
+        <div class="wallet" id="walletDisplay">💰 500元</div>
+    </div>
+
+    <div class="avatar-container">
+        <img class="avatar" src="myphoto.png" alt="专属男友" onclick="patHead()">
+        <div class="job-badge" id="jobBadge">正在打工中...</div>
+    </div>
+
+    <div class="status-text"><span>🍔 饱食度</span> <span id="foodText">50/100 (好饿)</span></div>
+    <div class="status-bar"><div class="fill-food" id="foodBar"></div></div>
+
+    <div class="status-text"><span>💭 心情值</span> <span id="moodText">50/100 (不开森)</span></div>
+    <div class="status-bar"><div class="fill-mood" id="moodBar"></div></div>
+    
+    <div class="status-text"><span>❤️ 健康值</span> <span id="healthText">70/100 (状态不错)</span></div>
+    <div class="status-bar"><div class="fill-health" id="healthBar"></div></div>
+
+    <div class="button-group">
+        <button class="btn-feed" onclick="feed()">🍔 喂他吃饭</button>
+        <button class="btn-pat" onclick="patHead()">👋 摸摸他</button>
+        <button class="btn-work" onclick="openModal('jobModal')">💼 安排打工</button>
+        <button class="btn-shop" onclick="openModal('shopModal')">🛒 道具商城</button>
+        <button class="btn-quote" onclick="triggerDailyQuote()">💌 今日情话</button>
+        <button class="btn-memory" onclick="openMemories()">✈️ 旅游记忆</button>
+        <button class="btn-achieve" onclick="openAchievements()">🏆 成就系统</button>
+        <button class="btn-spicy" onclick="triggerSpicy()">🔞 秘密互动</button>
+    </div>
+
+    <div class="message-box" id="dailyMessage">戳戳上面的按钮和我互动吧~</div>
+    <div class="history-box" id="historyBox">加载互动记录中...</div>
+</div>
+
+<div class="modal-overlay" id="storyModal">
+    <div class="modal-content" style="background: #fffaf0;">
+        <div class="modal-title" style="color: #9370db;">✨ 特殊互动 ✨</div>
+        <div id="storyPrompt" style="margin-bottom: 20px; font-size: 14px; color: #333; line-height: 1.6; font-weight: bold; text-align: left; padding: 12px; background: #fff; border-radius: 10px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
+            加载中...
+        </div>
+        <div id="storyChoices" style="display: flex; flex-direction: column;">
+            </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="jobModal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeModal('jobModal')">&times;</span>
+        <div class="modal-title">💼 工作安排 (耗时5小时)</div>
+        <div class="modal-scrollable">
+            <div class="list-item"><div class="item-info"><div class="item-name">给学生讲课</div><div class="item-desc">赚30元。健康、心情小幅下降。</div></div><button class="action-btn" onclick="startJob('teach')">安排</button></div>
+            <div class="list-item"><div class="item-info"><div class="item-name">送外卖</div><div class="item-desc">赚60元。健康、饱食、心情大幅下降。</div></div><button class="action-btn" onclick="startJob('delivery')">安排</button></div>
+            <div class="list-item"><div class="item-info"><div class="item-name">参加大胃王比赛</div><div class="item-desc">概率得奖最高100元。饱满，健康下降。</div></div><button class="action-btn" onclick="startJob('eat')">安排</button></div>
+            <div class="list-item"><div class="item-info"><div class="item-name">直播打游戏</div><div class="item-desc">赚40元。增加心情，饱食度大幅下降。</div></div><button class="action-btn" onclick="startJob('stream')">安排</button></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="shopModal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeModal('shopModal')">&times;</span>
+        <div class="modal-title">🛒 道具商城</div>
+        
+        <div id="shopPage1" class="modal-scrollable">
+            <div class="list-item"><div class="item-info"><div class="item-name">豪华大餐</div><div class="item-desc">饱食度满，心情增加</div></div><button class="action-btn" onclick="buyItem('meal', 100)">100元</button></div>
+            <div class="list-item"><div class="item-info"><div class="item-name">特效感冒药</div><div class="item-desc">增加 40 点健康值</div></div><button class="action-btn" onclick="buyItem('medicine', 50)">50元</button></div>
+            <div class="list-item"><div class="item-info"><div class="item-name">双人游乐园门票</div><div class="item-desc">心情值满，消耗少量健康</div></div><button class="action-btn" onclick="buyItem('ticket', 150)">150元</button></div>
+            <div class="list-item"><div class="item-info"><div class="item-name">高级护肤套装</div><div class="item-desc">心情与健康大涨</div></div><button class="action-btn" onclick="buyItem('skincare', 200)">200元</button></div>
+            <div class="list-item"><div class="item-info"><div class="item-name">最新款游戏机</div><div class="item-desc">心情极度愉悦，忘记吃饭</div></div><button class="action-btn" onclick="buyItem('console', 250)">250元</button></div>
+            <div class="list-item"><div class="item-info"><div class="item-name">名牌情侣手表</div><div class="item-desc">浪漫！心情和健康回满</div></div><button class="action-btn" onclick="buyItem('watch', 300)">300元</button></div>
+        </div>
+
+        <div id="shopPage2" class="modal-scrollable" style="display:none;">
+            <div class="list-item"><div class="item-info"><div class="item-name">电影双人票</div><div class="item-desc">平淡的幸福，心情+20</div></div><button class="action-btn" onclick="buyItem('movie', 80)">80元</button></div>
+            <div class="list-item"><div class="item-info"><div class="item-name">VIP演唱会门票</div><div class="item-desc">心情爆满，充满活力</div></div><button class="action-btn" onclick="buyItem('concert', 400)">400元</button></div>
+            <div class="list-item"><div class="item-info"><div class="item-name">领养一只小猫</div><div class="item-desc">单次购买！状态大幅提升</div></div><button class="action-btn" onclick="buyItem('cat', 800)">800元</button></div>
+            <div class="list-item" style="border:1px solid #ffd700; background:#fffacd;"><div class="item-info"><div class="item-name">江南·去苏州旅游</div><div class="item-desc">终极目标！解锁苏州记忆</div></div><button class="action-btn" style="background:#ff8c00;" onclick="buyItem('suzhou', 2000)">2000元</button></div>
+            <div class="list-item" style="border:1px solid #ffd700; background:#fffacd;"><div class="item-info"><div class="item-name">魔都·去上海旅游</div><div class="item-desc">终极目标！解锁上海记忆</div></div><button class="action-btn" style="background:#ff8c00;" onclick="buyItem('shanghai', 3000)">3000元</button></div>
+            <div class="list-item" style="border:1px solid #ffd700; background:#fffacd;"><div class="item-info"><div class="item-name">异国·去东京旅游</div><div class="item-desc">终极目标！解锁东京记忆</div></div><button class="action-btn" style="background:#ff8c00;" onclick="buyItem('tokyo', 5000)">5000元</button></div>
+        </div>
+        
+        <div class="shop-nav">
+            <button onclick="document.getElementById('shopPage1').style.display='block'; document.getElementById('shopPage2').style.display='none';">⬅ 第一页</button>
+            <button onclick="document.getElementById('shopPage1').style.display='none'; document.getElementById('shopPage2').style.display='block';">第二页 ➡</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="memoriesModal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeModal('memoriesModal')">&times;</span>
+        <div class="modal-title">✈️ 专属旅游记忆</div>
+        <div class="modal-scrollable" id="memoriesContent" style="padding: 10px;"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="achievementModal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeModal('achievementModal')">&times;</span>
+        <div class="modal-title">🏆 成就系统</div>
+        <div class="modal-scrollable" id="achievementContent"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="deathModal">
+    <div class="modal-content">
+        <div class="modal-title">⚠️ 警告</div>
+        <div style="font-size: 14px; color: #333; line-height: 1.6; margin-bottom: 15px;">
+            电子男友居然被你养死了！<br>
+            但是我替你看了一段超长的广告，<br>用神秘力量让他复活了。下次要好好照顾他哦！
+        </div>
+        <button class="action-btn" style="background:#dc143c;" onclick="revive()">点击复活</button>
+    </div>
+</div>
+
+<script>
+    // === 1. 核心数据与资源 ===
+    const startDate = new Date(2024, 5, 20); 
+
+    const foodList = ["汉堡", "薯条", "麻婆豆腐", "烤鸭", "奶茶", "披萨", "寿司", "烤肉", "火锅"];
+    const quotesPool = ["今天也很想你，不是今天，是每一天。", "乖乖吃饭，乖乖睡觉，等我去找你。", "距离再远，也挡不住我想抱你的心。", "看到好吃的，第一反应是：如果你在身边就好了。"];
+    const spicyPool = ["哈啊...你弄得我好热...", "唔...不要停，再多给我一点...", "今天晚上，换我在上面好不好？", "想把你整个吃掉，连骨头都不剩..."];
+
+    // 剧情文本系统
+    const storyData = {
+        'meal': {
+            prompt: "要请我吃大餐？谢谢啦，要请我吃什么？",
+            choices: [
+                { text: "日料", reply: "好啊，我想吃寿喜烧还有烧鸟。好想和你一起去日本旅游，这样就能吃到正宗的了" },
+                { text: "火锅", reply: "好耶，我要吃好多好多肉，你可别拖我的后腿哦" },
+                { text: "西餐", reply: "居然不是请我吃必胜客而是吃牛排吗！谢谢你，居然对我这么好！我想吃肋眼牛排，你想吃什么部位的牛肉呢？" }
+            ]
+        },
+        'medicine': {
+            prompt: "咳咳... 谢谢你给我买药... 感觉头好晕，你要怎么照顾我呀？",
+            choices: [
+                { text: "喂水喂药", reply: "咕噜咕噜... 药好苦，你要不要亲我一下当作奖励？" },
+                { text: "物理降温", reply: "冰冰凉凉的毛巾贴在额头上好舒服，有你在身边感觉病都好了一大半..." },
+                { text: "熬点热粥", reply: "哇，宝宝熬的粥好香！咳咳，虽然嗓子痛，但我一定全部吃光！" }
+            ]
+        },
+        'ticket': {
+            prompt: "要去游乐园？！太棒了！我们第一个项目玩什么好呢？",
+            choices: [
+                { text: "过山车", reply: "好刺激！待会儿害怕的话可以紧紧抓着我的手哦！" },
+                { text: "旋转木马", reply: "嘿嘿，我要骑在那匹大白马上给你拍照，你也要上来跟我一起吗？" },
+                { text: "鬼屋", reply: "啊？真的要去吗... 我不是怕啦，我只是担心你会被吓得晚上睡不着觉！" }
+            ]
+        },
+        'skincare': {
+            prompt: "哇，这么高级的护肤套装！你要帮我涂吗？",
+            choices: [
+                { text: "帮他敷面膜", reply: "唔... 凉凉的。不能笑哦，笑了面膜会皱的... 噗嗤，你靠得太近我看对眼了！" },
+                { text: "抹水乳顺便揉脸", reply: "哎呀！不要捏我的脸啦，都捏出肉肉了... 不过你的手好软哦。" },
+                { text: "让他自己弄", reply: "诶~ 居然让我自己来吗，好无情！不过为了你，我会好好保养这张帅脸的！" }
+            ]
+        },
+        'console': {
+            prompt: "卧槽！最新款的游戏机！！宝宝你太伟大了！我们先玩哪种游戏？",
+            choices: [
+                { text: "双人合作过关", reply: "好耶！我们果然是默契满分的最佳拍档，冲冲冲！" },
+                { text: "赛车竞速", reply: "嘿嘿，这次我可不会放水哦，输了的人今晚要洗碗！" },
+                { text: "恐怖游戏", reply: "把灯关上玩才有氛围！要是吓得不敢看，记得躲进我怀里哦~" }
+            ]
+        },
+        'watch': {
+            prompt: "这是... 名牌情侣手表！这也太贵重了... 可是好好看！我们要怎么戴？",
+            choices: [
+                { text: "亲自帮他戴上", reply: "尺寸刚刚好呢！看着指针走动，感觉就像我们的心跳连在一起了。" },
+                { text: "拍合照发朋友圈", reply: "立刻拍照！我要让全世界都知道我有一个这么好的宝宝！" },
+                { text: "偷偷藏在袖子里", reply: "嘿嘿，这可是我们两个人之间的秘密小浪漫，不给别人看~" }
+            ]
+        },
+        'movie': {
+            prompt: "去看电影呀！你想看什么类型的电影？",
+            choices: [
+                { text: "爱情片", reply: "嗯！看完之后，我要牵着你的手在街上慢慢走，就像电影里的男女主角一样。" },
+                { text: "科幻大片", reply: "哇哦！爆米花和可乐准备好！那种震耳欲聋的特效在电影院看最爽了！" },
+                { text: "悬疑烧脑", reply: "好呀好呀，我们来比比谁先猜出凶手是谁！输了的要买奶茶哦！" }
+            ]
+        },
+        'concert': {
+            prompt: "天哪！！VIP前排门票！！做梦都不敢想！！准备好去现场怎么嗨了吗？",
+            choices: [
+                { text: "戴上应援发箍", reply: "哈哈哈，这个发箍也太可爱了吧！我戴上是不是全场最靓的仔？" },
+                { text: "挥舞荧光棒", reply: "跟着节奏一起摇摆！就算明天胳膊酸痛嗓子哑掉也值了！！" },
+                { text: "静静在台下听", reply: "在这么喧嚣的人群里，只有你在我身边静静听歌的感觉... 真好。" }
+            ]
+        },
+        'cat': {
+            prompt: "我们真的要领养一只小猫吗？！太幸福了吧！你想要领养一只什么花色的猫猫？",
+            choices: [
+                { text: "粘人的银渐层", reply: "哇！它好软好乖，毛茸茸的像个小雪球... 以后我就有两只小可爱要照顾啦！" },
+                { text: "活泼的小橘猫", reply: "哈哈哈它好有活力！常言道十个橘猫九个胖，以后得控制它的饮食了。" },
+                { text: "霸气的奶牛猫", reply: "这小家伙眼神好犀利！不过在家里，肯定还是我最听你的话啦~" }
+            ]
+        }
+    };
+
+    // === 2. 本地数据初始化 ===
+    let food = parseFloat(localStorage.getItem('boyfriendFood')); if(isNaN(food)) food = 50;
+    let mood = parseFloat(localStorage.getItem('boyfriendMood')); if(isNaN(mood)) mood = 50;
+    let health = parseFloat(localStorage.getItem('boyfriendHealth')); if(isNaN(health)) health = 70;
+    let money = parseInt(localStorage.getItem('boyfriendMoney')); if(isNaN(money)) money = 500;
+    
+    let quotesTodayCount = parseInt(localStorage.getItem('quotesTodayCount')) || 0;
+    let lastQuoteDate = localStorage.getItem('lastQuoteDate') || "";
+    let spicyTodayCount = parseInt(localStorage.getItem('spicyTodayCount')) || 0;
+    let lastSpicyDate = localStorage.getItem('lastSpicyDate') || "";
+    let lastSpicyTime = parseInt(localStorage.getItem('lastSpicyTime')) || 0;
+    
+    let recentPets = JSON.parse(localStorage.getItem('recentPets')) || [];
+    let recentFeeds = JSON.parse(localStorage.getItem('recentFeeds')) || [];
+    let historyLog = JSON.parse(localStorage.getItem('interactionHistory')) || [];
+    let activeJob = localStorage.getItem('activeJob') || "";
+    let jobEndTime = parseInt(localStorage.getItem('jobEndTime')) || 0;
+    let eatBlockTime = parseInt(localStorage.getItem('eatBlockTime')) || 0;
+    let spicyTimer = null; 
+
+    let unlockedTrips = JSON.parse(localStorage.getItem('unlockedTrips')) || [];
+    let achievements = JSON.parse(localStorage.getItem('achievements')) || {}; 
+    let hasCat = localStorage.getItem('hasCat') === 'true';
+
+    let statsTracker = JSON.parse(localStorage.getItem('statsTracker')) || {
+        feedCount: 0, patCount: 0, workCount: 0, spendTotal: 0, spicyCount: 0, quoteCount: 0
+    };
+
+    // 成就字典定义
+    const achievementDefs = [
+        { id: 'first_blood', icon: '🐣', name: "初次见面", desc: "开启专属男友养成日记" },
+        { id: 'feed_10', icon: '🍚', name: "喂猪高手", desc: "累计喂食10次" },
+        { id: 'pat_10', icon: '🤲', name: "贴贴狂魔", desc: "累计摸头互动10次" },
+        { id: 'work_5', icon: '💼', name: "拼命三郎", desc: "累计安排打工5次" },
+        { id: 'eat_champ', icon: '🏆', name: "大胃王冠军", desc: "赢得大胃王比赛100元大奖" },
+        { id: 'spend_1k', icon: '💸', name: "挥金如土", desc: "累计在商城消费达到1000元" },
+        { id: 'spicy_5', icon: '🔞', name: "秘密情人", desc: "累计进行5次秘密互动" },
+        { id: 'quote_10', icon: '💌', name: "情话绵绵", desc: "累计听取10次今日情话" },
+        { id: 'have_cat', icon: '🐱', name: "猫狗双全", desc: "拥有了一只属于你们的专属小猫" },
+        { id: 'died', icon: '👻', name: "粗心大意", desc: "不小心把电子男友养死了一次" },
+        { id: 'perfect', icon: '✨', name: "完美男友", desc: "饱食、心情、健康同时达到100" },
+        { id: 'rich', icon: '🏦', name: "财富自由", desc: "单次持有存款达到5000元" },
+        { id: 'suzhou', icon: '🛶', name: "江南烟雨", desc: "解锁了苏州旅游记忆" },
+        { id: 'shanghai', icon: '🌃', name: "魔都风情", desc: "解锁了上海旅游记忆" },
+        { id: 'tokyo', icon: '🗼', name: "东京沉醉", desc: "解锁了东京旅游记忆" },
+        { id: 'all_trips', icon: '🌍', name: "环游世界", desc: "解锁全部三个旅游项目" }
+    ];
+
+    // === 3. 基础工具与成就核心系统 ===
+    function showToast(text) {
+        const toast = document.getElementById('toast');
+        toast.innerText = text; toast.style.opacity = 1;
+        setTimeout(() => { toast.style.opacity = 0; }, 2500);
+    }
+
+    function addHistory(msg) {
+        const d = new Date();
+        const timeStr = `${d.getMonth()+1}月${d.getDate()}日 ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+        historyLog.unshift(`[${timeStr}] ${msg}`); 
+        if(historyLog.length > 50) historyLog = historyLog.slice(0, 50); 
+        localStorage.setItem('interactionHistory', JSON.stringify(historyLog));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        const box = document.getElementById('historyBox');
+        if(historyLog.length === 0) { box.innerHTML = "<div style='color:#ccc; text-align:center;'>暂无互动记录</div>"; return; }
+        box.innerHTML = historyLog.join('<br><hr style="border:0; border-top:1px dashed #ffe6fa; margin:6px 0;">');
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function saveStats() { localStorage.setItem('statsTracker', JSON.stringify(statsTracker)); }
+
+    function unlockAchievement(id) {
+        if (!achievements[id]) {
+            const d = new Date();
+            const dateStr = `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`;
+            achievements[id] = dateStr;
+            localStorage.setItem('achievements', JSON.stringify(achievements));
+            
+            const achName = achievementDefs.find(a => a.id === id).name;
+            showToast(`🏆 解锁成就：【${achName}】！`);
+            addHistory(`🎉 达成成就：【${achName}】`);
+            
+            if (id === 'suzhou' || id === 'shanghai' || id === 'tokyo') {
+                if (achievements['suzhou'] && achievements['shanghai'] && achievements['tokyo']) {
+                    setTimeout(() => unlockAchievement('all_trips'), 1000);
+                }
+            }
+        }
+    }
+
+    function openAchievements() {
+        const content = document.getElementById('achievementContent');
+        let html = "";
+        achievementDefs.forEach(ach => {
+            const unlockedDate = achievements[ach.id];
+            if (unlockedDate) {
+                html += `<div class="achieve-item achieve-unlocked"><div class="achieve-icon">${ach.icon}</div><div class="achieve-info"><div class="achieve-name">${ach.name}</div><div class="achieve-desc">${ach.desc}</div><div class="achieve-date">解锁于: ${unlockedDate}</div></div></div>`;
+            } else {
+                html += `<div class="achieve-item"><div class="achieve-icon">${ach.icon}</div><div class="achieve-info"><div class="achieve-name">??? (未解锁)</div><div class="achieve-desc">${ach.desc}</div></div></div>`;
+            }
+        });
+        content.innerHTML = html; openModal('achievementModal');
+    }
+
+    function openMemories() {
+        const content = document.getElementById('memoriesContent');
+        if (unlockedTrips.length === 0) {
+            content.innerHTML = "<div style='color:#999; margin-top:20px;'>还没有解锁任何旅游记忆哦，<br>快去商城攒钱买机票吧！</div>";
+        } else {
+            let html = "";
+            const tripMap = {
+                'suzhou': { title: "🛶 江南水乡 · 苏州", prefix: "suzhou" },
+                'shanghai': { title: "🌃 魔都风情 · 上海", prefix: "shanghai" },
+                'tokyo': { title: "🗼 浪漫异国 · 东京", prefix: "tokyo" }
+            };
+            unlockedTrips.forEach(tripKey => {
+                const tripInfo = tripMap[tripKey];
+                html += `
+                <div class="trip-section">
+                    <div class="trip-title">${tripInfo.title}</div>
+                    <div class="photo-grid">
+                        <img class="photo-card" src="${tripInfo.prefix}_1.jpg" alt="照片1">
+                        <img class="photo-card" src="${tripInfo.prefix}_2.jpg" alt="照片2">
+                        <img class="photo-card" src="${tripInfo.prefix}_3.jpg" alt="照片3">
+                    </div>
+                </div>`;
+            });
+            content.innerHTML = html;
+        }
+        openModal('memoriesModal');
+    }
+
+    // === 4. 时间衰减与状态更新 ===
+    function catchUpDecay() {
+        let lastTime = parseInt(localStorage.getItem('lastUpdateTime')) || Date.now();
+        let now = Date.now();
+        let hoursPassed = (now - lastTime) / (1000 * 60 * 60);
+        
+        if (hoursPassed > 0) {
+            let drop = hoursPassed * (100 / 24);
+            food = Math.max(0, food - drop); mood = Math.max(0, mood - drop);
+            
+            let healthDropSpeed = 0;
+            if (food <= 50) healthDropSpeed += (50 - food) * 0.15; 
+            if (mood <= 50) healthDropSpeed += (50 - mood) * 0.15; 
+            
+            if (food >= 80 && mood >= 80) health += 2 * hoursPassed; 
+            else health -= healthDropSpeed * hoursPassed;
+            
+            localStorage.setItem('lastUpdateTime', now);
+        }
+        if (activeJob && now >= jobEndTime) resolveJob();
+    }
+
+    function updateUI() {
+        catchUpDecay(); 
+        if (health <= 0 && document.getElementById('deathModal').style.display !== 'flex') {
+            health = 0; openModal('deathModal'); unlockAchievement('died');
+        }
+
+        food = Math.max(0, Math.min(100, food)); mood = Math.max(0, Math.min(100, mood)); health = Math.max(0, Math.min(100, health));
+        if (food === 100 && mood === 100 && health === 100) unlockAchievement('perfect');
+        if (money >= 5000) unlockAchievement('rich');
+
+        document.getElementById('foodBar').style.width = food + '%';
+        document.getElementById('foodText').innerText = `${Math.floor(food)}/100 (${food <= 20 ? "饿死了" : food <= 50 ? "好饿" : food <= 80 ? "吃饱了" : "好撑"})`;
+        document.getElementById('moodBar').style.width = mood + '%';
+        document.getElementById('moodText').innerText = `${Math.floor(mood)}/100 (${mood <= 20 ? "抑郁了" : mood <= 50 ? "不开森" : mood <= 80 ? "开心" : "太开心啦"})`;
+        
+        let hBar = document.getElementById('healthBar'); hBar.style.width = health + '%';
+        hBar.style.background = health < 30 ? '#ff4500' : health < 50 ? '#ffd700' : '#98fb98';
+        document.getElementById('healthText').innerText = `${Math.floor(health)}/100 (${health < 10 ? "累坏了" : health < 30 ? "身体不舒服" : health < 50 ? "有点小感冒" : health < 80 ? "状态不错" : "很健康"})`;
+
+        document.getElementById('walletDisplay').innerText = `💰 ${money}元`;
+        
+        if (activeJob) {
+            document.getElementById('jobBadge').style.display = 'block';
+            let jobNames = { teach:"讲课", delivery:"送外卖", eat:"比赛", stream:"直播" };
+            document.getElementById('jobBadge').innerText = `正在 ${jobNames[activeJob]}...`;
+        } else { document.getElementById('jobBadge').style.display = 'none'; }
+
+        localStorage.setItem('boyfriendFood', food); localStorage.setItem('boyfriendMood', mood);
+        localStorage.setItem('boyfriendHealth', health); localStorage.setItem('boyfriendMoney', money);
+    }
+
+    function revive() {
+        closeModal('deathModal'); health = 70; food = 50; mood = 50;
+        addHistory("电子男友死而复生，感谢神秘的广告力量！"); updateUI();
+        document.getElementById('dailyMessage').innerHTML = "“呜呜呜... 刚才感觉自己要死掉了，宝宝以后不要不理我...”";
+    }
+
+    // === 5. 日常互动 ===
+    function feed() {
+        if (activeJob) { showToast("打工中不能吃饭哦！"); return; }
+        catchUpDecay(); let now = Date.now();
+        if (eatBlockTime > now) { showToast(`吃撑啦！还要消化 ${Math.ceil((eatBlockTime - now)/3600000)} 小时`); return; }
+        recentFeeds = recentFeeds.filter(t => now - t < 3600000);
+        if (food > 20 && recentFeeds.length >= 2) { showToast("已经吃不下啦！"); return; }
+        if (food >= 100) { showToast("吃太撑啦！"); return; }
+        
+        food += 17; recentFeeds.push(now); localStorage.setItem('recentFeeds', JSON.stringify(recentFeeds));
+        statsTracker.feedCount++; saveStats(); if(statsTracker.feedCount >= 10) unlockAchievement('feed_10');
+
+        const rFood = foodList[Math.floor(Math.random() * foodList.length)];
+        document.getElementById('dailyMessage').innerHTML = `“吧唧吧唧... 宝宝喂的【${rFood}】最好吃了！”`;
+        addHistory(`喂了【${rFood}】，饱食度 +17`); updateUI();
+    }
+
+    function patHead() {
+        if (activeJob) { showToast("正在打工中！"); return; }
+        catchUpDecay(); let now = Date.now();
+        recentPets = recentPets.filter(t => now - t < 3600000);
+        if (recentPets.length >= 3) { showToast("头都被摸秃啦，让他休息一小时吧~"); return; }
+        
+        mood += 12; recentPets.push(now); localStorage.setItem('recentPets', JSON.stringify(recentPets));
+        statsTracker.patCount++; saveStats(); if(statsTracker.patCount >= 10) unlockAchievement('pat_10');
+
+        document.getElementById('dailyMessage').innerHTML = "“嘿嘿，最喜欢宝宝摸我头了~ 舒服得想打呼噜~”";
+        addHistory(`摸了摸头，心情值 +12`); updateUI();
+    }
+
+    function triggerDailyQuote() {
+        if (activeJob) return showToast("打工中，没空说情话呢~"); 
+        const todayStr = new Date().toDateString();
+        if (lastQuoteDate !== todayStr) { quotesTodayCount = 0; lastQuoteDate = todayStr; }
+        if (quotesTodayCount >= 3) return showToast("今天情话听完啦~"); 
+
+        quotesTodayCount++; localStorage.setItem('quotesTodayCount', quotesTodayCount); localStorage.setItem('lastQuoteDate', lastQuoteDate);
+        statsTracker.quoteCount++; saveStats(); if(statsTracker.quoteCount >= 10) unlockAchievement('quote_10');
+
+        const q = quotesPool[Math.floor(Math.random() * quotesPool.length)];
+        addHistory(`小伊伊：“${q}”`); document.getElementById('dailyMessage').innerHTML = `<div style="color:#ff69b4;"><strong>💌 情话 (${quotesTodayCount}/3)</strong></div>${q}`;
+    }
+
+    function triggerSpicy() {
+        if (activeJob) return showToast("工作时间不能色色！"); 
+        catchUpDecay(); let now = Date.now(); const todayStr = new Date().toDateString();
+        if (lastSpicyDate !== todayStr) { spicyTodayCount = 0; lastSpicyDate = todayStr; }
+        if (spicyTodayCount >= 2) return showToast("今天身体已经被掏空啦..."); 
+        if (lastSpicyTime && (now - lastSpicyTime < 10800000)) return showToast(`还在回味中... 请等待几小时~`); 
+
+        mood += 40; food -= 20; health -= 15; 
+        spicyTodayCount++; lastSpicyTime = now;
+        localStorage.setItem('spicyTodayCount', spicyTodayCount); localStorage.setItem('lastSpicyDate', lastSpicyDate); localStorage.setItem('lastSpicyTime', lastSpicyTime);
+
+        statsTracker.spicyCount++; saveStats(); if(statsTracker.spicyCount >= 5) unlockAchievement('spicy_5');
+        addHistory(`和小伊伊爱爱了 ⁄(⁄ ⁄•⁄ω⁄•⁄ ⁄)⁄`); updateUI();
+
+        const msgBox = document.getElementById('dailyMessage');
+        msgBox.innerHTML = `<div style="color:#dc143c; font-weight:bold;">💕 “${spicyPool[Math.floor(Math.random() * spicyPool.length)]}”</div>`;
+        clearTimeout(spicyTimer); spicyTimer = setTimeout(() => { msgBox.innerHTML = "<div style='color:#888;'>（互动结束，脸红地整理好了衣服...）</div>"; }, 5000);
+    }
+
+    function startJob(type) {
+        if (activeJob) return showToast("已经在打工啦！"); 
+        if (health <= 20) return showToast("身体太虚弱了，不能打工！"); 
+        activeJob = type; jobEndTime = Date.now() + 5 * 60 * 60 * 1000; 
+        localStorage.setItem('activeJob', activeJob); localStorage.setItem('jobEndTime', jobEndTime);
+        statsTracker.workCount++; saveStats(); if(statsTracker.workCount >= 5) unlockAchievement('work_5');
+        closeModal('jobModal'); updateUI(); showToast("安排打工成功！");
+    }
+
+    function resolveJob() {
+        let earned = 0; let logMsg = "";
+        if (activeJob === 'teach') { earned = 30; health -= 15; mood -= 15; logMsg = "给学生讲课完毕，赚到了30元。"; } 
+        else if (activeJob === 'delivery') { earned = 60; health -= 30; food -= 30; mood -= 25; logMsg = "送外卖跑断了腿，赚到了60元。"; } 
+        else if (activeJob === 'stream') { earned = 40; mood += 20; food -= 35; health -= 15; logMsg = "直播打游戏完毕，赚到了40元。"; } 
+        else if (activeJob === 'eat') {
+            food = 100; health -= 25; eatBlockTime = Date.now() + 5 * 60 * 60 * 1000; localStorage.setItem('eatBlockTime', eatBlockTime);
+            let r = Math.random();
+            if (r < 0.1) { earned = 100; mood += 30; logMsg = "参加大胃王比赛夺冠！赚到了100元！"; unlockAchievement('eat_champ'); }
+            else if (r < 0.4) { earned = 50; mood += 15; logMsg = "参加大胃王比赛拿到名次，赚到了50元。"; }
+            else if (r < 0.8) { earned = 20; mood += 5; logMsg = "参加大胃王比赛拿到安慰奖，赚到了20元。"; }
+            else { earned = -20; mood -= 20; logMsg = "大胃王比赛失败，白搭参赛费扣除20元。"; }
+        }
+        money += earned; addHistory(logMsg);
+        activeJob = ""; jobEndTime = 0; localStorage.setItem('activeJob', ""); localStorage.setItem('jobEndTime', 0);
+        updateUI(); document.getElementById('dailyMessage').innerHTML = `“宝宝我回来啦！${logMsg}”`;
+    }
+
+    // === 6. 剧情与商城系统 ===
+    let pendingItemInfo = null;
+
+    function buyItem(item, price) {
+        if (activeJob) return showToast("打工中没空收礼物~"); 
+        if (['suzhou', 'shanghai', 'tokyo'].includes(item) && unlockedTrips.includes(item)) return showToast("这个地方去过啦！"); 
+        if (item === 'cat' && hasCat) return showToast("我们已经有一只小猫啦，家里放不下啦！"); 
+
+        if (money < price) { 
+            const wallet = document.getElementById('walletDisplay');
+            wallet.style.background = '#ffb6c1'; wallet.style.color = '#fff';
+            setTimeout(() => { wallet.style.background = '#fff8dc'; wallet.style.color = '#ff8c00'; }, 500);
+            return showToast("钱包余额不足哦！"); 
+        }
+        
+        closeModal('shopModal');
+
+        // 如果该商品有剧情分支配置，则打开剧情选择框
+        if (storyData[item]) {
+            pendingItemInfo = { item, price };
+            openStoryModal(item);
+        } else {
+            // 直接购买 (旅游项目)
+            processPurchase(item, price, null);
+        }
+    }
+
+    function openStoryModal(item) {
+        const data = storyData[item];
+        document.getElementById('storyPrompt').innerText = `小伊伊：“${data.prompt}”`;
+        const btnContainer = document.getElementById('storyChoices');
+        btnContainer.innerHTML = '';
+        data.choices.forEach((choice, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'story-btn';
+            btn.innerText = `> ${choice.text}`;
+            btn.onclick = () => selectStoryChoice(index);
+            btnContainer.appendChild(btn);
+        });
+        openModal('storyModal');
+    }
+
+    function selectStoryChoice(index) {
+        const { item, price } = pendingItemInfo;
+        const choiceObj = storyData[item].choices[index];
+        closeModal('storyModal');
+        processPurchase(item, price, choiceObj);
+    }
+
+    function processPurchase(item, price, choiceObj) {
+        money -= price;
+        let logMsg = "";
+        
+        statsTracker.spendTotal += price; saveStats();
+        if(statsTracker.spendTotal >= 1000) unlockAchievement('spend_1k');
+        
+        // 属性结算
+        if (item === 'meal') { food = 100; mood += 30; logMsg = "请小伊伊吃了豪华大餐！"; } 
+        else if (item === 'medicine') { health += 40; logMsg = "给小伊伊喂了特效感冒药！"; } 
+        else if (item === 'ticket') { mood = 100; health -= 10; logMsg = "一起去双人游乐园疯玩了一天！"; } 
+        else if (item === 'skincare') { mood += 30; health += 20; logMsg = "买了高级护肤套装！"; }
+        else if (item === 'console') { mood = 100; food -= 20; logMsg = "买了游戏机！"; }
+        else if (item === 'watch') { mood = 100; health = 100; logMsg = "送了名牌情侣手表！"; }
+        else if (item === 'movie') { mood += 20; logMsg = "一起看了一场浪漫的电影。"; }
+        else if (item === 'concert') { mood = 100; health += 30; logMsg = "看了VIP演唱会！"; }
+        else if (item === 'cat') { 
+            mood = 100; health = 100; 
+            logMsg = `领养了一只${choiceObj.text}，成为了幸福的一家三口！`; 
+            hasCat = true; localStorage.setItem('hasCat', 'true');
+            unlockAchievement('have_cat');
+        }
+        else if (['suzhou', 'shanghai', 'tokyo'].includes(item)) {
+            unlockedTrips.push(item); localStorage.setItem('unlockedTrips', JSON.stringify(unlockedTrips));
+            logMsg = `和小伊伊一起去了${item === 'suzhou'?'苏州':item==='shanghai'?'上海':'东京'}旅游！`;
+            unlockAchievement(item);
+        }
+
+        // 添加选择记录
+        if (choiceObj && item !== 'cat') { logMsg += `（选择了：${choiceObj.text}）`; }
+        addHistory(logMsg);
+        
+        // 显示人物回复剧情
+        if (choiceObj) {
+            document.getElementById('dailyMessage').innerHTML = `<div style="color:#ff69b4; font-weight:bold;">💕 小伊伊：“${choiceObj.reply}”</div>`;
+        } else {
+            document.getElementById('dailyMessage').innerHTML = `“哇！谢谢宝宝，最爱你了！”`;
+        }
+        updateUI();
+    }
+
+    // 初始化
+    document.getElementById('dayDisplay').innerText = `相恋 ${Math.ceil((new Date() - startDate) / (1000 * 60 * 60 * 24))} 天`;
+    unlockAchievement('first_blood'); renderHistory(); updateUI(); setInterval(updateUI, 60000);
+
+</script>
+</body>
+</html>
