@@ -159,11 +159,11 @@
 <div class="toast" id="toast">提示信息</div>
 
 <div class="container">
-    <h1>💕 专属男友养成日记 💕</h1>
+    <h1>💕 和小伊伊的恋爱日记 💕</h1>
     
     <div class="header-info">
         <div class="day-counter" id="dayDisplay">计算中...</div>
-        <div class="wallet" id="walletDisplay">💰 500元</div>
+        <div class="wallet" id="walletDisplay" onclick="enterCheatCode()" style="cursor: pointer;" title="点此输入作弊码">💰 500元</div>
     </div>
 
     <div class="avatar-container">
@@ -180,6 +180,15 @@
     <div class="status-text"><span>❤️ 健康值</span> <span id="healthText">70/100 (状态不错)</span></div>
     <div class="status-bar"><div class="fill-health" id="healthBar"></div></div>
 
+    <div id="work-ui" style="display: none; background: #fff0f5; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <div style="font-size: 14px; font-weight: bold; color: #ff8c00; margin-bottom: 5px;" id="work-ui-title">正在打工中...</div>
+        <div style="width: 100%; background-color: #ddd; border-radius: 10px; height: 15px; overflow: hidden; margin-bottom: 5px;">
+            <div id="progress-fill" style="width: 0%; background-color: #ff8c00; height: 100%; transition: width 1s linear;"></div>
+        </div>
+        <div id="work-time-left" style="font-size: 12px; color: #666; margin-bottom: 10px;">剩余时间: 计算中...</div>
+        <button onclick="cancelJob()" style="background-color: #ff4c4c; color: white; border: none; padding: 6px 15px; border-radius: 8px; font-size: 12px;">提前结束(无收益)</button>
+    </div>
+
     <div class="button-group">
         <button class="btn-feed" onclick="feed()">🍔 喂他吃饭</button>
         <button class="btn-pat" onclick="patHead()">👋 摸摸他</button>
@@ -189,6 +198,7 @@
         <button class="btn-memory" onclick="openMemories()">✈️ 旅游记忆</button>
         <button class="btn-achieve" onclick="openAchievements()">🏆 成就系统</button>
         <button class="btn-spicy" onclick="triggerSpicy()">🔞 秘密互动</button>
+        <button onclick="openLotteryMenu()" style="background-color: #ff9800; color: white; font-weight: bold; box-shadow: 0 4px 8px rgba(255,152,0,0.3);">🎟️ 买彩票</button>
     </div>
 
     <div class="message-box" id="dailyMessage">戳戳上面的按钮和我互动吧~</div>
@@ -203,6 +213,38 @@
         </div>
         <div id="storyChoices" style="display: flex; flex-direction: column;">
             </div>
+    </div>
+</div>
+
+<div id="lotteryModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center;">
+    <div style="background: white; padding: 20px; border-radius: 15px; text-align: center; width: 280px;">
+        <h3 style="color: #ff69b4; margin-top: 0;">🍀 幸运彩票站</h3>
+        <p style="font-size: 14px; color: #666;">（今日剩余购买次数：<span id="lotteryLeftText">3</span>）</p>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button onclick="openLotteryInput(20)" class="story-btn" style="width:100%;">> 刮刮卡 (20元)</button>
+            <button onclick="openLotteryInput(50)" class="story-btn" style="width:100%;">> 幸运星 (50元)</button>
+            <button onclick="openLotteryInput(100)" class="story-btn" style="width:100%;">> 追梦人 (100元)</button>
+        </div>
+        <button onclick="closeModal('lotteryModal')" style="margin-top: 15px; padding: 8px 15px; border-radius: 10px; border: none; background: #ddd; cursor: pointer;">取消</button>
+    </div>
+</div>
+
+<div id="lotteryInputModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center;">
+    <div style="background: white; padding: 20px; border-radius: 15px; text-align: center; width: 260px;">
+        <h3 style="color: #ff8c00;">输入6个幸运数字</h3>
+        <input type="text" id="lotteryNumberInput" maxlength="6" placeholder="例如: 123456" style="width: 80%; padding: 10px; font-size: 18px; text-align: center; border: 2px solid #ffb6c1; border-radius: 10px; margin: 10px 0; letter-spacing: 5px;">
+        <br>
+        <button onclick="buyLottery()" style="background: #ff69b4; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer;">确认购买</button>
+        <button onclick="closeModal('lotteryInputModal')" style="background: #ddd; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; margin-left: 10px;">取消</button>
+    </div>
+</div>
+
+<div id="lotteryResultModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;">
+    <div style="background: white; padding: 20px; border-radius: 15px; text-align: center; width: 280px; box-shadow: 0 0 20px rgba(255,105,180,0.6);">
+        <h2 style="color: #ff69b4; margin-top: 0;" id="lotteryResultTitle">开奖啦！</h2>
+        <p style="font-size: 16px; margin: 10px 0;">开奖号码：<br><strong style="font-size: 24px; color: #dc143c; letter-spacing: 4px;" id="lotteryWinningCode">000000</strong></p>
+        <p id="lotteryResultDesc" style="color: #555; font-weight: bold;"></p>
+        <button onclick="closeModal('lotteryResultModal')" style="margin-top: 15px; background: #ff69b4; color: white; border: none; padding: 10px 30px; border-radius: 10px; cursor: pointer;">确定</button>
     </div>
 </div>
 
@@ -361,6 +403,11 @@
     };
 
     // === 2. 本地数据初始化 ===
+    // === 彩票系统状态 ===
+    let lotteryTodayCount = parseInt(localStorage.getItem('lotteryTodayCount')) || 0;
+    let lastLotteryDate = localStorage.getItem('lastLotteryDate') || "";
+    let lotteryPityCount = parseInt(localStorage.getItem('lotteryPityCount')) || 0; // 保底计数器
+    let currentLotteryBet = 0; // 当前选中的彩票面额
     let food = parseFloat(localStorage.getItem('boyfriendFood')); if(isNaN(food)) food = 50;
     let mood = parseFloat(localStorage.getItem('boyfriendMood')); if(isNaN(mood)) mood = 50;
     let health = parseFloat(localStorage.getItem('boyfriendHealth')); if(isNaN(health)) health = 70;
@@ -388,25 +435,106 @@
         feedCount: 0, patCount: 0, workCount: 0, spendTotal: 0, spicyCount: 0, quoteCount: 0
     };
 
+    // === 新增：作弊码功能 ===
+    function enterCheatCode() {
+        let code = prompt("请输入神秘暗号：");
+        if (code === "020228") {
+            // 1. 增加 10000 元钱
+            money += 10000;
+            
+            // 2. 检查是否正在打工，如果是，则立即完成
+            if (activeJob) {
+                resolveJob(); // 调用结算函数，它会自动重置计时器、清空工作状态并更新UI
+                showToast("✨ 作弊生效！获得10,000元并瞬间下班！");
+                addHistory("使用了时空加速，瞬间完成工作并获得10,000元！");
+            } else {
+                // 如果没在打工，只需要手动更新一下UI显示新余额
+                updateUI();
+                showToast("✨ 作弊生效！已获得 10,000 元！");
+                addHistory("使用了神秘力量，获得了 10,000 元！");
+            }
+        } else {
+            showToast("暗号错误，不要乱试哦~");
+        }
+    }
+
+    // === 新增：打工进度条与取消逻辑 ===
+    setInterval(updateJobUI, 1000); // 每秒自动更新进度条
+
+    function updateJobUI() {
+        if (activeJob && jobEndTime > 0) {
+            let now = Date.now();
+            let remaining = jobEndTime - now;
+            let workDuration = 5 * 60 * 60 * 1000; // 5小时倒计时
+
+            if (remaining > 0) {
+                document.getElementById("work-ui").style.display = "block";
+                document.querySelector('.button-group').style.display = 'none'; // 打工期间隐藏操作按钮
+                
+                let percent = ((workDuration - remaining) / workDuration) * 100;
+                document.getElementById("progress-fill").style.width = percent + "%";
+                
+                let h = Math.floor(remaining / (1000 * 60 * 60));
+                let m = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+                let s = Math.floor((remaining % (1000 * 60)) / 1000);
+                document.getElementById("work-time-left").innerText = `剩余时间: ${h}小时 ${m}分钟 ${s}秒`;
+                
+                let jobNames = { teach:"讲课", delivery:"送外卖", eat:"比赛", stream:"直播" };
+                document.getElementById("work-ui-title").innerText = `正在 ${jobNames[activeJob]}...`;
+            } else {
+                // 倒计时刚好结束
+                hideWorkUI();
+                resolveJob(); // 倒计时结束，立刻触发发工资和状态结算！
+            }
+        } else {
+            // 没有打工任务时
+            hideWorkUI();
+        }
+    }
+
+    // 性能优化：只在需要时才操作 DOM 的隐藏函数，避免每秒强刷导致手机发热卡顿
+    function hideWorkUI() {
+        let workUI = document.getElementById("work-ui");
+        if (workUI.style.display !== "none") {
+            workUI.style.display = "none";
+            document.querySelector('.button-group').style.display = 'grid'; // 恢复操作按钮
+        }
+    }
+
+    function cancelJob() {
+        if (activeJob) {
+            activeJob = "";
+            jobEndTime = 0;
+            localStorage.setItem('activeJob', "");
+            localStorage.setItem('jobEndTime', 0);
+            document.getElementById("work-ui").style.display = "none";
+            document.querySelector('.button-group').style.display = 'grid'; // 恢复操作按钮
+            updateUI();
+            showToast("已取消打工，注意休息哦！(无收益)");
+            addHistory("提前结束了打工，还是身体要紧~");
+        }
+    }
+
     // 成就字典定义
     const achievementDefs = [
-        { id: 'first_blood', icon: '🐣', name: "初次见面", desc: "开启专属男友养成日记" },
-        { id: 'feed_10', icon: '🍚', name: "喂猪高手", desc: "累计喂食10次" },
-        { id: 'pat_10', icon: '🤲', name: "贴贴狂魔", desc: "累计摸头互动10次" },
-        { id: 'work_5', icon: '💼', name: "拼命三郎", desc: "累计安排打工5次" },
-        { id: 'eat_champ', icon: '🏆', name: "大胃王冠军", desc: "赢得大胃王比赛100元大奖" },
-        { id: 'spend_1k', icon: '💸', name: "挥金如土", desc: "累计在商城消费达到1000元" },
-        { id: 'spicy_5', icon: '🔞', name: "秘密情人", desc: "累计进行5次秘密互动" },
-        { id: 'quote_10', icon: '💌', name: "情话绵绵", desc: "累计听取10次今日情话" },
-        { id: 'have_cat', icon: '🐱', name: "猫狗双全", desc: "拥有了一只属于你们的专属小猫" },
-        { id: 'died', icon: '👻', name: "粗心大意", desc: "不小心把电子男友养死了一次" },
-        { id: 'perfect', icon: '✨', name: "完美男友", desc: "饱食、心情、健康同时达到100" },
-        { id: 'rich', icon: '🏦', name: "财富自由", desc: "单次持有存款达到5000元" },
-        { id: 'suzhou', icon: '🛶', name: "江南烟雨", desc: "解锁了苏州旅游记忆" },
-        { id: 'shanghai', icon: '🌃', name: "魔都风情", desc: "解锁了上海旅游记忆" },
-        { id: 'tokyo', icon: '🗼', name: "东京沉醉", desc: "解锁了东京旅游记忆" },
-        { id: 'all_trips', icon: '🌍', name: "环游世界", desc: "解锁全部三个旅游项目" }
-    ];
+    { id: 'first_blood', icon: '🐣', name: "初次见面", desc: "开启专属男友养成日记" },
+    { id: 'feed_10', icon: '🍚', name: "喂猪高手", desc: "累计喂食10次" },
+    { id: 'pat_10', icon: '🤲', name: "贴贴狂魔", desc: "累计摸头互动10次" },
+    { id: 'work_5', icon: '💼', name: "拼命三郎", desc: "累计安排打工5次" },
+    { id: 'eat_champ', icon: '🏆', name: "大胃王冠军", desc: "赢得大胃王比赛100元大奖" },
+    { id: 'spend_1k', icon: '💸', name: "挥金如土", desc: "累计在商城消费达到1000元" },
+    { id: 'spicy_5', icon: '🔞', name: "秘密情人", desc: "累计进行5次秘密互动" },
+    { id: 'quote_10', icon: '💌', name: "情话绵绵", desc: "累计听取10次今日情话" },
+    { id: 'have_cat', icon: '🐱', name: "猫狗双全", desc: "拥有了一只属于你们的专属小猫" },
+    { id: 'died', icon: '👻', name: "粗心大意", desc: "不小心把电子男友养死了一次" },
+    { id: 'perfect', icon: '✨', name: "完美男友", desc: "饱食、心情、健康同时达到100" },
+    { id: 'rich', icon: '🏦', name: "财富自由", desc: "单次持有存款达到5000元" },
+    { id: 'suzhou', icon: '🛶', name: "江南烟雨", desc: "解锁了苏州旅游记忆" },
+    { id: 'shanghai', icon: '🌃', name: "魔都风情", desc: "解锁了上海旅游记忆" },
+    { id: 'tokyo', icon: '🗼', name: "东京沉醉", desc: "解锁了东京旅游记忆" },
+    { id: 'all_trips', icon: '🌍', name: "环游世界", desc: "解锁全部三个旅游项目" },
+    { id: 'lottery_jackpot', icon: '🎰', name: "彩票大奖", desc: "在幸运彩票站赢得过 10 倍头奖！" }
+];
 
     // === 3. 基础工具与成就核心系统 ===
     function showToast(text) {
@@ -497,8 +625,15 @@
 
     // === 4. 时间衰减与状态更新 ===
     function catchUpDecay() {
-        let lastTime = parseInt(localStorage.getItem('lastUpdateTime')) || Date.now();
+        let lastTime = parseInt(localStorage.getItem('lastUpdateTime'));
         let now = Date.now();
+        
+        // 【修复】如果是新玩家，立刻记录当前时间作为基准
+        if (isNaN(lastTime)) {
+            lastTime = now;
+            localStorage.setItem('lastUpdateTime', now);
+        }
+        
         let hoursPassed = (now - lastTime) / (1000 * 60 * 60);
         
         if (hoursPassed > 0) {
@@ -512,6 +647,7 @@
             if (food >= 80 && mood >= 80) health += 2 * hoursPassed; 
             else health -= healthDropSpeed * hoursPassed;
             
+            // 更新最后计算时间
             localStorage.setItem('lastUpdateTime', now);
         }
         if (activeJob && now >= jobEndTime) resolveJob();
@@ -619,19 +755,40 @@
     function startJob(type) {
         if (activeJob) return showToast("已经在打工啦！"); 
         if (health <= 20) return showToast("身体太虚弱了，不能打工！"); 
-        activeJob = type; jobEndTime = Date.now() + 5 * 60 * 60 * 1000; 
-        localStorage.setItem('activeJob', activeJob); localStorage.setItem('jobEndTime', jobEndTime);
-        statsTracker.workCount++; saveStats(); if(statsTracker.workCount >= 5) unlockAchievement('work_5');
-        closeModal('jobModal'); updateUI(); showToast("安排打工成功！");
+
+        // === 新增：时间限制逻辑 ===
+        const now = new Date();
+        const hour = now.getHours();
+        const minute = now.getMinutes();
+
+        // 判断是否在 20:00 (20时) 以后，或者在 06:30 (6时30分) 以前
+        // 逻辑：小时 >= 20 或者 小时 < 6 或者 (小时 == 6 且 分钟 < 30)
+        if (hour >= 20 || hour < 6 || (hour === 6 && minute < 30)) {
+            return showToast("太晚了，等早上七点再让我工作吧");
+        }
+        // ========================
+
+        activeJob = type; 
+        jobEndTime = Date.now() + 5 * 60 * 60 * 1000; // 5小时后完成
+        localStorage.setItem('activeJob', activeJob); 
+        localStorage.setItem('jobEndTime', jobEndTime);
+        
+        statsTracker.workCount++; 
+        saveStats(); 
+        if(statsTracker.workCount >= 5) unlockAchievement('work_5');
+        
+        closeModal('jobModal'); 
+        updateUI(); 
+        showToast("安排打工成功！");
     }
 
     function resolveJob() {
         let earned = 0; let logMsg = "";
-        if (activeJob === 'teach') { earned = 30; health -= 15; mood -= 15; logMsg = "给学生讲课完毕，赚到了30元。"; } 
-        else if (activeJob === 'delivery') { earned = 60; health -= 30; food -= 30; mood -= 25; logMsg = "送外卖跑断了腿，赚到了60元。"; } 
+        if (activeJob === 'teach') { earned = 30; health -= 10; mood -= 15; logMsg = "给学生讲课完毕，赚到了30元。"; } 
+        else if (activeJob === 'delivery') { earned = 60; health -= 20; food -= 30; mood -= 25; logMsg = "送外卖跑断了腿，赚到了60元。"; } 
         else if (activeJob === 'stream') { earned = 40; mood += 20; food -= 35; health -= 15; logMsg = "直播打游戏完毕，赚到了40元。"; } 
         else if (activeJob === 'eat') {
-            food = 100; health -= 25; eatBlockTime = Date.now() + 5 * 60 * 60 * 1000; localStorage.setItem('eatBlockTime', eatBlockTime);
+            food = 100; health -= 15; eatBlockTime = Date.now() + 5 * 60 * 60 * 1000; localStorage.setItem('eatBlockTime', eatBlockTime);
             let r = Math.random();
             if (r < 0.1) { earned = 100; mood += 30; logMsg = "参加大胃王比赛夺冠！赚到了100元！"; unlockAchievement('eat_champ'); }
             else if (r < 0.4) { earned = 50; mood += 15; logMsg = "参加大胃王比赛拿到名次，赚到了50元。"; }
@@ -731,6 +888,117 @@
             document.getElementById('dailyMessage').innerHTML = `“哇！谢谢宝宝，最爱你了！”`;
         }
         updateUI();
+    }
+    
+    // === 7. 彩票系统 ===
+    function openLotteryMenu() {
+        if (activeJob) return showToast("打工中不能去买彩票哦！");
+        
+        let todayStr = new Date().toDateString();
+        if (lastLotteryDate !== todayStr) {
+            lotteryTodayCount = 0;
+            lastLotteryDate = todayStr;
+            localStorage.setItem('lastLotteryDate', lastLotteryDate);
+            localStorage.setItem('lotteryTodayCount', lotteryTodayCount);
+        }
+        
+        if (lotteryTodayCount >= 3) return showToast("今天彩票已经买满3张啦，明天再来吧！");
+        
+        document.getElementById('lotteryLeftText').innerText = 3 - lotteryTodayCount;
+        openModal('lotteryModal');
+    }
+
+    function openLotteryInput(amount) {
+        if (money < amount) return showToast("钱包余额不足以买这张彩票哦！");
+        currentLotteryBet = amount;
+        document.getElementById('lotteryNumberInput').value = '';
+        closeModal('lotteryModal');
+        openModal('lotteryInputModal');
+    }
+
+    function buyLottery() {
+        let inputStr = document.getElementById('lotteryNumberInput').value;
+        if (!/^\d{6}$/.test(inputStr)) return showToast("请输入完整的6位纯数字！");
+        
+        // 扣钱、加次数
+        money -= currentLotteryBet;
+        lotteryTodayCount++;
+        localStorage.setItem('lotteryTodayCount', lotteryTodayCount);
+        
+        // 计算概率与保底
+        let base10x = 0.05;
+        let pityBonus = Math.max(0, (lotteryPityCount - 20) * 0.10);
+        let prob10x = Math.min(1.0, base10x + pityBonus); // 头奖概率，最高为100%
+        
+        let remain = 1.0 - prob10x;
+        let prob3x = Math.min(remain, 0.06); remain -= prob3x;
+        let prob2x = Math.min(remain, 0.06); remain -= prob2x;
+        let prob1x = Math.min(remain, 0.30);
+        
+        let rand = Math.random();
+        let matchTarget = 0; // 决定要匹配几个数字
+        
+        if (rand < prob10x) matchTarget = 6;
+        else if (rand < prob10x + prob3x) matchTarget = 5;
+        else if (rand < prob10x + prob3x + prob2x) matchTarget = 4;
+        else if (rand < prob10x + prob3x + prob2x + prob1x) matchTarget = 3;
+        else matchTarget = Math.floor(Math.random() * 3); // 没中奖，随机匹配 0、1 或 2 个
+
+        // 根据匹配目标生成开奖号码
+        let userArr = inputStr.split('');
+        let winArr = new Array(6);
+        let indices = [0, 1, 2, 3, 4, 5];
+        indices.sort(() => 0.5 - Math.random()); // 打乱索引
+        let matchIndices = indices.slice(0, matchTarget); // 挑选出要求相同位置的索引
+        
+        for (let i = 0; i < 6; i++) {
+            if (matchIndices.includes(i)) {
+                winArr[i] = userArr[i]; // 相同位置
+            } else {
+                // 不同位置，排除掉用户填的那个数字
+                let pool = ['0','1','2','3','4','5','6','7','8','9'].filter(d => d !== userArr[i]);
+                winArr[i] = pool[Math.floor(Math.random() * pool.length)];
+            }
+        }
+        
+        let winCode = winArr.join('');
+        document.getElementById('lotteryWinningCode').innerText = winCode;
+        
+        // 结算奖金
+        let prize = 0;
+        let desc = "";
+        if (matchTarget === 6) {
+            prize = currentLotteryBet * 10;
+            desc = `🎉 奇迹出现！6位全中，获得十倍大奖：${prize}元！`;
+            lotteryPityCount = 0; // 中头奖，保底清零
+            unlockAchievement('lottery_jackpot'); // 触发成就
+        } else if (matchTarget === 5) {
+            prize = currentLotteryBet * 3;
+            desc = `😍 恭喜！对上5位，获得三倍奖金：${prize}元！`;
+            lotteryPityCount++;
+        } else if (matchTarget === 4) {
+            prize = currentLotteryBet * 2;
+            desc = `😊 不错哦！对上4位，获得双倍奖金：${prize}元！`;
+            lotteryPityCount++;
+        } else if (matchTarget === 3) {
+            prize = currentLotteryBet;
+            desc = `🤔 对上了3位，保本啦，返还：${prize}元！`;
+            lotteryPityCount++;
+        } else {
+            desc = `😭 哎呀，只对上了${matchTarget}位，遗憾没中奖...`;
+            lotteryPityCount++;
+        }
+        
+        localStorage.setItem('lotteryPityCount', lotteryPityCount);
+        money += prize;
+        
+        // 更新历史记录和UI
+        addHistory(`花了${currentLotteryBet}元买彩票，选号[${inputStr}]，开奖[${winCode}]。${prize > 0 ? `赚了${prize}元！` : '没中奖。'}`);
+        updateUI();
+        
+        document.getElementById('lotteryResultDesc').innerText = desc;
+        closeModal('lotteryInputModal');
+        openModal('lotteryResultModal');
     }
 
     // 初始化
